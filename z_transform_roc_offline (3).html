@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-Transform ROC Visualizer (Offline)</title>
+    <!-- Embedded CSS for offline support -->
+    <style>
+    /* Reset & Base */
+    *, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; border-color: #e5e7eb; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: #f9fafb; color: #111827; }
+    h1, h2, h3, h4 { font-weight: 700; margin: 0; }
+    p { margin: 0; }
+    button { cursor: pointer; background-color: transparent; font-family: inherit; }
+    button:disabled { cursor: not-allowed; opacity: 0.5; }
+    
+    /* Layout Utilities */
+    .min-h-screen { min-height: 100vh; }
+    .max-w-7xl { max-width: 80rem; }
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+    .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+    .pb-12 { padding-bottom: 3rem; }
+    
+    .flex { display: flex; }
+    .flex-col { display: flex; flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-6 { gap: 1.5rem; }
+    .gap-8 { gap: 2rem; }
+    .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+    .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
+    
+    .grid { display: grid; }
+    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    
+    @media (min-width: 768px) {
+      .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    
+    @media (min-width: 1024px) {
+      .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .lg\:col-span-2 { grid-column: span 2 / span 2; }
+      .lg\:col-span-1 { grid-column: span 1 / span 1; }
+    }
+    
+    /* Styling Utilities */
+    .bg-white { background-color: white; }
+    .bg-gray-50 { background-color: #f9fafb; }
+    .bg-gray-100 { background-color: #f3f4f6; }
+    .bg-gray-900 { background-color: #111827; }
+    .bg-blue-600 { background-color: #2563eb; }
+    .bg-blue-50 { background-color: #eff6ff; }
+    .bg-red-50 { background-color: #fef2f2; }
+    .bg-yellow-50 { background-color: #fefce8; }
+    .bg-indigo-50 { background-color: #eef2ff; }
+    .bg-green-50 { background-color: #f0fdf4; }
+    
+    .text-white { color: white; }
+    .text-gray-900 { color: #111827; }
+    .text-gray-800 { color: #1f2937; }
+    .text-gray-700 { color: #374151; }
+    .text-gray-500 { color: #6b7280; }
+    .text-gray-400 { color: #9ca3af; }
+    .text-blue-600 { color: #2563eb; }
+    .text-blue-700 { color: #1d4ed8; }
+    .text-blue-800 { color: #1e40af; }
+    .text-blue-900 { color: #1e3a8a; }
+    .text-indigo-800 { color: #3730a3; }
+    .text-indigo-900 { color: #312e81; }
+    .text-yellow-800 { color: #854d0e; }
+    .text-yellow-900 { color: #713f12; }
+    .text-green-800 { color: #166534; }
+    .text-red-600 { color: #dc2626; }
+    .text-red-500 { color: #ef4444; }
+    
+    .border { border-width: 1px; }
+    .border-b { border-bottom-width: 1px; }
+    .border-t { border-top-width: 1px; }
+    .border-l-4 { border-left-width: 4px; }
+    .border-gray-100 { border-color: #f3f4f6; }
+    .border-gray-200 { border-color: #e5e7eb; }
+    .border-red-200 { border-color: #fecaca; }
+    .border-blue-200 { border-color: #bfdbfe; }
+    .border-indigo-500 { border-color: #6366f1; }
+    .border-blue-500 { border-color: #3b82f6; }
+    .border-yellow-500 { border-color: #eab308; }
+    .border-yellow-200 { border-color: #fde68a; }
+    .border-green-200 { border-color: #bbf7d0; }
+    
+    .rounded-lg { border-radius: 0.5rem; }
+    .rounded-xl { border-radius: 0.75rem; }
+    .rounded-full { border-radius: 9999px; }
+    .rounded-r { border-top-right-radius: 0.25rem; border-bottom-right-radius: 0.25rem; }
+    .rounded { border-radius: 0.25rem; }
+    
+    .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+    
+    .w-full { width: 100%; }
+    .h-full { height: 100%; }
+    .w-4 { width: 1rem; }
+    .h-4 { height: 1rem; }
+    .w-5 { width: 1.25rem; }
+    .h-5 { height: 1.25rem; }
+    .w-8 { width: 2rem; }
+    .h-8 { height: 2rem; }
+    
+    .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    
+    .font-bold { font-weight: 700; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .italic { font-style: italic; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .tracking-wide { letter-spacing: 0.025em; }
+    .underline { text-decoration: underline; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+    .align-middle { vertical-align: middle; }
+    .inline-block { display: inline-block; }
+    
+    .sticky { position: sticky; }
+    .top-0 { top: 0; }
+    .z-10 { z-index: 10; }
+    
+    .cursor-move { cursor: move; }
+    .cursor-crosshair { cursor: crosshair; }
+    .overflow-hidden { overflow: hidden; }
+    .overflow-x-auto { overflow-x: auto; }
+    .overflow-y-auto { overflow-y: auto; }
+    .max-h-32 { max-height: 8rem; }
+    .relative { position: relative; }
+    .select-none { user-select: none; }
+    .block { display: block; }
+    .mt-auto { margin-top: auto; }
+    .mt-1 { margin-top: 0.25rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mx-1 { margin-left: 0.25rem; margin-right: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .p-2 { padding: 0.5rem; }
+    .p-3 { padding: 0.75rem; }
+    .p-4 { padding: 1rem; }
+    .p-6 { padding: 1.5rem; }
+    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .pt-4 { padding-top: 1rem; }
+    .pb-2 { padding-bottom: 0.5rem; }
+
+    /* Interactive Elements */
+    .transition-all { transition-property: all; transition-duration: 300ms; }
+    .transition-colors { transition-property: background-color, border-color, color, fill, stroke; transition-duration: 300ms; }
+    
+    /* Specific overrides for interactivity */
+    .group:hover .group-hover-stroke-red { stroke: #dc2626; }
+    .group:hover circle.group-hover-scale { r: 5px; }
+    
+    /* ZPlane Container Fix - Ensure responsive scaling */
+    #zplane-container {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    #zplane-svg { 
+        display: block; 
+        margin: 0 auto; 
+        width: 100%; 
+        height: auto; 
+    }
+  </style>
+    <!-- React Dependencies (CDN) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // --- ICONS ---
+        const PlusIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>;
+        const TrashIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>;
+
+        // --- CONSTANTS ---
+        const SequenceType = {
+          RIGHT_SIDED: 'Right-Sided (Causal)',
+          LEFT_SIDED: 'Left-Sided (Anti-Causal)',
+          TWO_SIDED: 'Two-Sided'
+        };
+        const SVG_SIZE = 500;
+        const CENTER = SVG_SIZE / 2;
+        const UNIT_RADIUS = 150;
+
+        // --- MATH UTILS ---
+        const screenToLogical = (x, y) => ({
+          x: (x - CENTER) / UNIT_RADIUS,
+          y: -(y - CENTER) / UNIT_RADIUS
+        });
+        const logicalToScreen = (x, y) => ({
+          x: CENTER + x * UNIT_RADIUS,
+          y: CENTER - y * UNIT_RADIUS
+        });
+        const getMagnitude = (p) => Math.sqrt(p.x * p.x + p.y * p.y);
+        const getAngle = (p) => Math.atan2(p.y, p.x);
+        const complexPow = (mag, angle, n) => {
+          if (mag === 0) return { re: 0, im: 0 };
+          if (Math.abs(n) > 50 && mag > 1.1) return { re: Infinity, im: Infinity };
+          const r = Math.pow(mag, n);
+          const theta = angle * n;
+          return { re: r * Math.cos(theta), im: r * Math.sin(theta) };
+        };
+
+        // --- COMPONENTS ---
+        
+        const ZPlane = ({ poles, sequenceType, onUpdatePoles }) => {
+            const svgRef = useRef(null);
+            const [draggingId, setDraggingId] = useState(null);
+
+            const magnitudes = poles.map(p => p.magnitude);
+            const maxMag = magnitudes.length > 0 ? Math.max(...magnitudes) : 0;
+            const minMag = magnitudes.length > 0 ? Math.min(...magnitudes) : 0;
+
+            const handleMouseDown = (id, e) => {
+                e.stopPropagation();
+                setDraggingId(id);
+            };
+
+            const handleMouseMove = (e) => {
+                if (!draggingId || !svgRef.current) return;
+                const CTM = svgRef.current.getScreenCTM();
+                if (!CTM) return;
+                const x = (e.clientX - CTM.e) / CTM.a;
+                const y = (e.clientY - CTM.f) / CTM.d;
+                const logicalPos = screenToLogical(x, y);
+                const newMag = getMagnitude(logicalPos);
+                const newAngle = getAngle(logicalPos);
+                const updatedPoles = poles.map(p => 
+                  p.id === draggingId ? { ...p, position: logicalPos, magnitude: newMag, angle: newAngle } : p
+                );
+                onUpdatePoles(updatedPoles);
+            };
+
+            const handleMouseUp = () => setDraggingId(null);
+
+            const renderROC = () => {
+                if (poles.length === 0) return null;
+                const rMax = maxMag * UNIT_RADIUS;
+                const rMin = minMag * UNIT_RADIUS;
+                const rInf = SVG_SIZE * 1.5;
+
+                if (sequenceType === SequenceType.RIGHT_SIDED) {
+                  return (
+                      <path
+                      d={`M ${CENTER - rInf} ${CENTER - rInf} H ${CENTER + rInf} V ${CENTER + rInf} H ${CENTER - rInf} Z M ${CENTER} ${CENTER - rMax} A ${rMax} ${rMax} 0 1 0 ${CENTER} ${CENTER + rMax} A ${rMax} ${rMax} 0 1 0 ${CENTER} ${CENTER - rMax} Z`}
+                      fill="rgba(34, 197, 94, 0.2)"
+                      fillRule="evenodd"
+                      className="transition-all"
+                      />
+                  );
+                } else if (sequenceType === SequenceType.LEFT_SIDED) {
+                  return <circle cx={CENTER} cy={CENTER} r={rMin} fill="rgba(59, 130, 246, 0.2)" className="transition-all" />;
+                } else {
+                  if (poles.length < 2) return null;
+                  return (
+                      <path
+                      d={`M ${CENTER} ${CENTER - rMax} A ${rMax} ${rMax} 0 1 1 ${CENTER} ${CENTER + rMax} A ${rMax} ${rMax} 0 1 1 ${CENTER} ${CENTER - rMax} Z M ${CENTER} ${CENTER - rMin} A ${rMin} ${rMin} 0 1 0 ${CENTER} ${CENTER + rMin} A ${rMin} ${rMin} 0 1 0 ${CENTER} ${CENTER - rMin} Z`}
+                      fill="rgba(234, 179, 8, 0.2)"
+                      fillRule="evenodd"
+                      className="transition-all"
+                      />
+                  );
+                }
+            };
+
+            return (
+                <div id="zplane-container" className="relative bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden cursor-crosshair">
+                <svg ref={svgRef} viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} className="block select-none" id="zplane-svg">
+                    <defs>
+                    <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+                        <path d="M 25 0 L 0 0 0 25" fill="none" stroke="gray" strokeWidth="0.5" strokeOpacity="0.1"/>
+                    </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+                    <line x1={0} y1={CENTER} x2={SVG_SIZE} y2={CENTER} stroke="#9ca3af" strokeWidth="2" />
+                    <line x1={CENTER} y1={0} x2={CENTER} y2={SVG_SIZE} stroke="#9ca3af" strokeWidth="2" />
+                    <text x={SVG_SIZE - 10} y={CENTER + 20} textAnchor="end" className="text-xs fill-gray-500 font-mono">Re(z)</text>
+                    <text x={CENTER + 10} y={20} className="text-xs fill-gray-500 font-mono">Im(z)</text>
+                    {renderROC()}
+                    <circle cx={CENTER} cy={CENTER} r={UNIT_RADIUS} fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="5,5" className="pointer-events-none" />
+                    <text x={CENTER + UNIT_RADIUS + 5} y={CENTER + 20} className="text-xs fill-red-500 font-semibold">|z|=1</text>
+                    {poles.map((pole) => {
+                    const pos = logicalToScreen(pole.position.x, pole.position.y);
+                    const isDragging = draggingId === pole.id;
+                    return (
+                        <g key={pole.id} onMouseDown={(e) => handleMouseDown(pole.id, e)} className="cursor-move group">
+                        <circle cx={pos.x} cy={pos.y} r={20} fill="transparent" />
+                        <line x1={pos.x - 6} y1={pos.y - 6} x2={pos.x + 6} y2={pos.y + 6} stroke={isDragging ? "#dc2626" : "#000"} strokeWidth={3} className="transition-colors group-hover-stroke-red"/>
+                        <line x1={pos.x + 6} y1={pos.y - 6} x2={pos.x - 6} y2={pos.y + 6} stroke={isDragging ? "#dc2626" : "#000"} strokeWidth={3} className="transition-colors group-hover-stroke-red"/>
+                        <title>{`Pole: ${pole.magnitude.toFixed(2)} e^(j${pole.angle.toFixed(2)})`}</title>
+                        </g>
+                    );
+                    })}
+                </svg>
+                </div>
+            );
+        };
+
+        const TimeDomainPlot = ({ poles, sequenceType }) => {
+            const WIDTH = 600;
+            const HEIGHT = 200;
+            const PADDING = 40;
+            const X_AXIS_Y = HEIGHT / 2;
+
+            const nValues = useMemo(() => {
+                const indices = [];
+                if (sequenceType === SequenceType.RIGHT_SIDED) {
+                for (let i = -5; i <= 30; i++) indices.push(i);
+                } else if (sequenceType === SequenceType.LEFT_SIDED) {
+                for (let i = -30; i <= 5; i++) indices.push(i);
+                } else {
+                for (let i = -20; i <= 20; i++) indices.push(i);
+                }
+                return indices;
+            }, [sequenceType]);
+
+            const dataPoints = useMemo(() => {
+                const sortedPoles = [...poles].sort((a, b) => a.magnitude - b.magnitude);
+                const splitIndex = Math.floor(sortedPoles.length / 2);
+                return nValues.map((n) => {
+                let sumRe = 0;
+                sortedPoles.forEach((pole, index) => {
+                    let isCausal = false;
+                    if (sequenceType === SequenceType.RIGHT_SIDED) isCausal = true;
+                    else if (sequenceType === SequenceType.LEFT_SIDED) isCausal = false;
+                    else {
+                      if (sortedPoles.length === 1) isCausal = pole.magnitude < 1;
+                      else isCausal = index < splitIndex;
+                    }
+                    const val = complexPow(pole.magnitude, pole.angle, n);
+                    if (isCausal) {
+                      if (n >= 0) sumRe += val.re;
+                    } else {
+                      if (n < 0) sumRe -= val.re;
+                    }
+                });
+                return { n, val: sumRe };
+                });
+            }, [poles, sequenceType, nValues]);
+
+            const maxAbsVal = Math.max(...dataPoints.map(d => Math.abs(d.val)), 0.001);
+            const plotScaleY = (HEIGHT / 2 - PADDING) / (Math.min(maxAbsVal, 100));
+            const minN = nValues[0];
+            const maxN = nValues[nValues.length - 1];
+            const plotScaleX = (WIDTH - PADDING * 2) / (maxN - minN);
+
+            const getX = (n) => PADDING + (n - minN) * plotScaleX;
+            const getY = (val) => {
+                let clampedVal = val;
+                if (val > 100) clampedVal = 100;
+                if (val < -100) clampedVal = -100;
+                return X_AXIS_Y - clampedVal * plotScaleY;
+            };
+
+            return (
+                <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-200 mt-6">
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-bold text-gray-800">Time-Domain Impulse Response h[n]</h3>
+                    <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">Max Amp: {maxAbsVal > 1000 ? '>1000' : maxAbsVal.toFixed(2)}</span>
+                </div>
+                <div className="overflow-x-auto">
+                    <svg width={WIDTH} height={HEIGHT} className="mx-auto select-none" style={{maxWidth: '100%', height: 'auto'}}>
+                    <rect x={PADDING} y={PADDING} width={WIDTH - PADDING*2} height={HEIGHT - PADDING*2} fill="#f9fafb" />
+                    <line x1={PADDING} y1={X_AXIS_Y} x2={WIDTH - PADDING} y2={X_AXIS_Y} stroke="#9ca3af" strokeWidth={2} />
+                    <line x1={getX(0)} y1={PADDING} x2={getX(0)} y2={HEIGHT - PADDING} stroke="#e5e7eb" strokeWidth={2} strokeDasharray="4,4" />
+                    {dataPoints.map((pt) => {
+                        const x = getX(pt.n);
+                        const y = getY(pt.val);
+                        const isClipped = Math.abs(pt.val) > 100;
+                        const color = isClipped ? "#ef4444" : "#4f46e5";
+                        return (
+                        <g key={pt.n} className="group">
+                            <line x1={x} y1={X_AXIS_Y} x2={x} y2={y} stroke={color} strokeWidth={2} />
+                            <circle cx={x} cy={y} r={isClipped ? 2 : 3} fill={isClipped ? "white" : color} stroke={color} strokeWidth={isClipped ? 2 : 0} className="group-hover-scale transition-all" />
+                            <title>{`n: ${pt.n}, h[n]: ${pt.val.toFixed(3)}`}</title>
+                        </g>
+                        );
+                    })}
+                    </svg>
+                </div>
+                </div>
+            );
+        };
+
+        const TheoryPanel = ({ poles, sequenceType }) => {
+          const magnitudes = poles.map(p => p.magnitude);
+          const maxMag = magnitudes.length > 0 ? Math.max(...magnitudes) : 0;
+          const minMag = magnitudes.length > 0 ? Math.min(...magnitudes) : 0;
+
+          const renderContent = () => {
+             if (sequenceType === SequenceType.RIGHT_SIDED) {
+               return (
+                <div className="space-y-4">
+                  <div className="p-3 bg-blue-50 border-l-4 border-blue-500 rounded-r">
+                    <h4 className="font-bold text-blue-900 text-sm">Right-Sided Sequence (Causal)</h4>
+                    <p className="text-sm text-blue-800 mt-1">Typical form: <span className="font-mono">x[n] = aⁿu[n]</span></p>
+                  </div>
+                  <p className="text-sm text-gray-700">The Z-Transform sum runs from <span className="font-mono">n = 0</span> to <span className="font-mono">∞</span>:</p>
+                  <div className="bg-gray-100 p-2 rounded text-center font-mono text-sm">X(z) = Σ (a·z⁻¹)ⁿ</div>
+                  <p className="text-sm text-gray-700">This is a <strong>geometric series</strong>. For convergence, the common ratio magnitude must be &lt; 1:</p>
+                  <div className="flex flex-col items-center gap-2 my-2">
+                    <div className="bg-white px-4 py-2 border rounded shadow-sm font-mono text-sm">|a·z⁻¹| &lt; 1</div>
+                    <span className="text-gray-400">↓ rearranged</span>
+                    <div className="bg-green-50 px-4 py-2 border border-green-200 rounded shadow-sm font-mono font-bold text-green-800">|z| &gt; {maxMag.toFixed(2)}</div>
+                  </div>
+                  <p className="text-sm text-gray-600 italic">Result: The ROC is <strong>outside</strong> the circle defined by the largest pole.</p>
+                </div>
+               );
+             }
+             if (sequenceType === SequenceType.LEFT_SIDED) {
+               return (
+                <div className="space-y-4">
+                  <div className="p-3 bg-indigo-50 border-l-4 border-indigo-500 rounded-r">
+                    <h4 className="font-bold text-indigo-900 text-sm">Left-Sided Sequence (Anti-Causal)</h4>
+                    <p className="text-sm text-indigo-800 mt-1">Typical form: <span className="font-mono">x[n] = -aⁿu[-n-1]</span></p>
+                  </div>
+                  <p className="text-sm text-gray-700">The Z-Transform sum runs from <span className="font-mono">n = -∞</span> to <span className="font-mono">-1</span>.</p>
+                  <div className="bg-gray-100 p-2 rounded text-center font-mono text-sm">X(z) = -Σ (a⁻¹·z)ᵐ</div>
+                  <p className="text-sm text-gray-700">For convergence:</p>
+                  <div className="flex flex-col items-center gap-2 my-2">
+                    <div className="bg-white px-4 py-2 border rounded shadow-sm font-mono text-sm">|a⁻¹·z| &lt; 1</div>
+                    <span className="text-gray-400">↓ rearranged</span>
+                    <div className="bg-green-50 px-4 py-2 border border-green-200 rounded shadow-sm font-mono font-bold text-green-800">|z| &lt; {minMag.toFixed(2)}</div>
+                  </div>
+                  <p className="text-sm text-gray-600 italic">Result: The ROC is <strong>inside</strong> the circle defined by the smallest pole.</p>
+                </div>
+               );
+             }
+             return (
+              <div className="space-y-4">
+                 <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded-r">
+                  <h4 className="font-bold text-yellow-900 text-sm">Two-Sided Sequence</h4>
+                  <p className="text-sm text-yellow-800 mt-1">Combination of causal and anti-causal parts.</p>
+                </div>
+                <p className="text-sm text-gray-700">A two-sided signal can be split into a right-sided part (converges for |z| &gt; r₁) and a left-sided part (converges for |z| &lt; r₂).</p>
+                <div className="bg-gray-100 p-3 rounded text-center font-mono text-sm my-2">ROC = ROC_right ∩ ROC_left</div>
+                <p className="text-sm text-gray-700">Valid if overlap exists:</p>
+                <div className="bg-green-50 px-4 py-3 border border-green-200 rounded shadow-sm font-mono font-bold text-green-800 text-center">
+                  {minMag.toFixed(2)} &lt; |z| &lt; {maxMag.toFixed(2)}
+                </div>
+                <p className="text-sm text-gray-600 italic">Result: The ROC is an <strong>annular ring</strong>.</p>
+              </div>
+             );
+          }
+
+          return (
+             <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mt-6">
+                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                    <span className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center font-serif italic font-bold">∑</span>
+                    Definition & ROC Meaning
+                 </h3>
+                 <div className="mb-6">
+                    <p className="text-sm text-gray-500 mb-2 uppercase font-semibold tracking-wider">The Mathematical Definition</p>
+                    <div className="bg-gray-900 text-white p-4 rounded-lg flex flex-col items-center justify-center font-mono">
+                      <div className="text-lg">X(z) = <span className="text-2xl inline-block align-middle mx-1">Σ</span> x[n] · z⁻ⁿ</div>
+                      <div className="text-xs text-gray-400 mt-1">n = -∞ to +∞</div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2 text-center">The ROC is simply the set of <span className="font-mono font-bold">z</span> values where this sum converges.</p>
+                  </div>
+                 <div className="border-t border-gray-100 pt-4">
+                    {poles.length === 0 ? <p className="text-gray-500 italic">Add poles to see derivation.</p> : renderContent()}
+                 </div>
+             </div>
+          )
+        };
+
+        const InfoPanel = ({ poles, sequenceType }) => {
+            const magnitudes = poles.map(p => p.magnitude);
+            const maxMag = magnitudes.length > 0 ? Math.max(...magnitudes) : 0;
+            const minMag = magnitudes.length > 0 ? Math.min(...magnitudes) : 0;
+            
+            let isStable = false;
+            let stabilityReason = "";
+
+            if (poles.length === 0) {
+                stabilityReason = "No poles defined.";
+            } else {
+                switch (sequenceType) {
+                case SequenceType.RIGHT_SIDED:
+                    isStable = maxMag < 1;
+                    stabilityReason = isStable ? "Stable: Poles inside unit circle." : "Unstable: Pole outside/on unit circle.";
+                    break;
+                case SequenceType.LEFT_SIDED:
+                    isStable = minMag > 1;
+                    stabilityReason = isStable ? "Stable: Unit circle included." : "Unstable: Unit circle excluded.";
+                    break;
+                case SequenceType.TWO_SIDED:
+                    isStable = minMag < 1 && maxMag > 1;
+                    stabilityReason = isStable ? "Stable: Ring includes unit circle." : "Unstable: Ring excludes unit circle.";
+                    break;
+                }
+            }
+            
+            const rocText = () => {
+              if (poles.length === 0) return "Entire Z-plane";
+              switch (sequenceType) {
+                case SequenceType.RIGHT_SIDED: return `|z| > ${maxMag.toFixed(2)}`;
+                case SequenceType.LEFT_SIDED: return `|z| < ${minMag.toFixed(2)}`;
+                case SequenceType.TWO_SIDED: return `${minMag.toFixed(2)} < |z| < ${maxMag.toFixed(2)}`;
+              }
+            };
+
+            return (
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">System Analysis</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                        <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                          <p className="text-xs font-semibold text-gray-500 uppercase">ROC Equation</p>
+                          <p className="text-xl font-mono text-blue-900 font-bold mt-1">{rocText()}</p>
+                        </div>
+                        <div className={`p-4 rounded-lg border ${isStable ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                            <p className="font-bold flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${isStable ? 'bg-green-50' : 'bg-red-50'}`}></span> {isStable ? 'Stable System' : 'Unstable System'}</p>
+                            <p className="text-sm mt-1">{stabilityReason}</p>
+                        </div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-500 italic flex items-center justify-center">
+                        AI explanations require internet & API key.
+                    </div>
+                </div>
+                </div>
+            );
+        };
+
+        const ControlPanel = ({ poles, sequenceType, setSequenceType, addPole, removeLastPole, reset }) => (
+            <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-full flex flex-col gap-6">
+                <h2 className="text-xl font-bold text-gray-800">Configuration</h2>
+                <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Sequence Type</label>
+                <div className="flex flex-col gap-2">
+                    {Object.values(SequenceType).map(t => (
+                    <button key={t} onClick={() => setSequenceType(t)} className={`px-4 py-3 rounded-lg text-sm text-left border ${sequenceType === t ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 text-gray-700 border-gray-200'}`}>{t}</button>
+                    ))}
+                </div>
+                </div>
+                <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Poles ({poles.length})</label>
+                <div className="flex gap-2">
+                    <button onClick={addPole} className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"><PlusIcon className="w-4 h-4" /> Add</button>
+                    <button onClick={removeLastPole} disabled={poles.length === 0} className="flex-1 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"><TrashIcon className="w-4 h-4" /> Remove</button>
+                </div>
+                </div>
+                <div className="mt-auto">
+                    <button onClick={reset} className="w-full text-center text-sm text-gray-500 underline mb-4">Reset to Default</button>
+                    <div className="bg-yellow-50 text-yellow-800 text-xs p-3 rounded border border-yellow-200">
+                        Offline Mode Active
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- MAIN APP ---
+        const App = () => {
+            const initialState = {"poles":[{"id":"1","position":{"x":0.5,"y":0.5},"magnitude":0.7071067811865476,"angle":0.7853981633974483}],"sequenceType":"Right-Sided (Causal)"};
+            const [poles, setPoles] = useState(initialState.poles);
+            const [sequenceType, setSequenceType] = useState(initialState.sequenceType);
+
+            const addPole = () => {
+                const offset = poles.length * 0.1;
+                const newPole = {
+                    id: Date.now().toString(),
+                    position: { x: 0.3 + offset, y: -0.3 - offset },
+                    magnitude: Math.sqrt(Math.pow(0.3 + offset, 2) + Math.pow(-0.3 - offset, 2)),
+                    angle: Math.atan2(-0.3 - offset, 0.3 + offset)
+                };
+                setPoles([...poles, newPole]);
+            };
+
+            const removeLastPole = () => setPoles(poles.slice(0, -1));
+            const reset = () => {
+                setPoles(initialState.poles);
+                setSequenceType(initialState.sequenceType);
+            };
+
+            return (
+                <div className="min-h-screen pb-12">
+                    <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+                        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">Z</div>
+                                <h1 className="text-xl font-bold text-gray-900">Z-Transform ROC Visualizer (Offline)</h1>
+                            </div>
+                        </div>
+                    </header>
+                    <main className="max-w-7xl mx-auto px-4 py-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-2 flex flex-col gap-6">
+                                <ZPlane poles={poles} sequenceType={sequenceType} onUpdatePoles={setPoles} />
+                                <TimeDomainPlot poles={poles} sequenceType={sequenceType} />
+                                <TheoryPanel poles={poles} sequenceType={sequenceType} />
+                                <InfoPanel poles={poles} sequenceType={sequenceType} />
+                            </div>
+                            <div className="lg:col-span-1">
+                                <ControlPanel 
+                                    poles={poles} 
+                                    sequenceType={sequenceType} 
+                                    setSequenceType={setSequenceType} 
+                                    addPole={addPole} 
+                                    removeLastPole={removeLastPole} 
+                                    reset={reset} 
+                                />
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
